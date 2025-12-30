@@ -1,0 +1,31 @@
+[package]
+name = "milow-plugin-sdk"
+version = "2.1.0"
+edition = "2021"
+description = "SDK for developing Milow Agent plugins in Rust (no_std)"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/LuxVTZ/milow-plugin-sdk"
+keywords = ["plugin", "sdk", "no-std", "ffi", "windows"]
+categories = ["no-std", "api-bindings"]
+
+[workspace]
+
+[lib]
+crate-type = ["rlib"]
+
+[features]
+default = []
+
+[dependencies]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+panic = "abort"
