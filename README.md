@@ -5,34 +5,35 @@ SDK для разработки плагинов Milow Agent на Rust.
 ## Возможности
 
 - **no_std** - работает без стандартной библиотеки
+- **Type Safety** - newtype wrappers для хешей (`CmdHash`, `ModuleHash`, `ApiHash`)
+- **Builder Pattern** - удобное создание команд через `CommandBuilder`
 - **ABI версионирование** - совместимость между версиями агента
 - **API резолвер** - динамическое разрешение WinAPI через PEB
-- **Предвычисленные хеши** - compile-time DJB2 хеши для команд и API
-- **Утилиты** - хелперы для работы с буферами и памятью
+- **Предвычисленные хеши** - compile-time DJB2 хеши
+- **Утилиты** - хелперы для работы с буферами
 
 ## Структура
 
 ```
 src/
-├── lib.rs          # Главный модуль, реэкспорты
-├── abi.rs          # ABI структуры (PluginCallbackTable, PluginCommand)
-├── error.rs        # Коды ошибок
+├── lib.rs          # Главный модуль, реэкспорты, макросы
+├── abi.rs          # ABI (PluginCallbackTable, CommandBuilder)
+├── types.rs        # Type-safe wrappers (CmdHash, PluginId, CommandFlags)
+├── error.rs        # SdkError enum + коды ошибок
 ├── hash.rs         # DJB2 хеширование
 ├── ffi.rs          # Windows типы и константы
 ├── util.rs         # Утилиты (write_*, mem*, strlen)
 ├── hashes/
-│   ├── mod.rs      # Модуль хешей
-│   ├── cmd.rs      # Хеши команд (ping, shell, etc.)
-│   ├── module.rs   # Хеши модулей (kernel32.dll, ntdll.dll)
-│   └── api.rs      # Хеши WinAPI (VirtualAlloc, NtQuerySystemInformation)
+│   ├── cmd.rs      # Хеши команд (PING_HASH, SHELL_HASH, etc.)
+│   ├── module.rs   # Хеши модулей (KERNEL32, NTDLL, etc.)
+│   └── api.rs      # Хеши WinAPI функций
 └── win/
-    ├── mod.rs      # Модуль Windows
-    ├── peb.rs      # Доступ к PEB/TEB
-    ├── resolver.rs # get_module_by_hash, get_proc_by_hash
-    └── modules.rs  # get_kernel32, get_ntdll, get_iphlpapi, etc.
+    ├── peb.rs      # PEB/TEB доступ
+    ├── resolver.rs # Динамический резолвинг API
+    └── modules.rs  # Хелперы для модулей
 ```
 
-## Использование
+## Быстрый старт
 
 ```rust
 #![no_std]
@@ -40,70 +41,91 @@ src/
 
 use milow_plugin_sdk::*;
 
-const PLUGIN_ID: u64 = 0x50494E47; // "PING"
+const PLUGIN_ID: PluginId = PluginId::from_str(b"PING");
 
 #[no_mangle]
 pub unsafe extern "C" fn _start(table: *mut PluginCallbackTable) -> i32 {
     if !check_abi_version(table) {
-        return error::ABI_MISMATCH as i32;
+        return SdkError::AbiMismatch.code() as i32;
     }
-    
+
     let table = &mut *table;
-    
-    if !table.register(hashes::cmd::PING, cmd_ping, PLUGIN_ID) {
-        return error::REGISTRATION_FAILED as i32;
+
+    // Builder pattern (рекомендуется)
+    let cmd = CommandBuilder::new(hashes::cmd::PING_HASH)
+        .callback(cmd_ping)
+        .plugin_id(PLUGIN_ID)
+        .flags(CommandFlags::NONE)
+        .build();
+
+    for slot in table.commands.iter_mut() {
+        if !slot.is_active() {
+            *slot = cmd;
+            table.count += 1;
+            return 0;
+        }
     }
-    
-    0
+
+    SdkError::RegistrationFailed.code() as i32
 }
 
 unsafe extern "C" fn cmd_ping(
-    _task_id: u64,
-    _data: *const u8,
-    _data_len: usize,
-    result_buf: *mut u8,
-    result_len: *mut usize,
+    _task_id: u64, _data: *const u8, _data_len: usize,
+    result_buf: *mut u8, result_len: *mut usize,
 ) -> u32 {
     write_str(result_buf, result_len, b"pong");
-    error::SUCCESS
+    SdkError::Success.code()
 }
 
 #[panic_handler]
-fn panic(_: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
+fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
 ```
 
 ## API Reference
 
-### ABI
+### Type-Safe Types
 
-| Константа | Значение | Описание |
-|-----------|----------|----------|
-| `SDK_ABI_VERSION` | 2 | Версия ABI |
-| `MAX_PLUGIN_COMMANDS` | 8 | Макс. команд на плагин |
-| `MAX_RESULT_SIZE` | 16384 | Макс. размер результата |
+| Тип | Описание |
+|-----|----------|
+| `CmdHash` | Хеш команды (case-sensitive) |
+| `ModuleHash` | Хеш модуля Windows (case-insensitive) |
+| `ApiHash` | Хеш API функции (case-insensitive) |
+| `PluginId` | ID плагина (8 bytes) |
+| `CommandFlags` | Флаги команды (bitflags) |
+| `SdkError` | Enum кодов ошибок |
 
-### Коды ошибок
+### CommandFlags
 
-| Код | Значение | Описание |
-|-----|----------|----------|
-| `SUCCESS` | 0 | Успех |
-| `INVALID_ARGS` | 1 | Неверные аргументы |
-| `NOT_FOUND` | 2 | Не найдено |
-| `OUT_OF_MEMORY` | 7 | Недостаточно памяти |
-| `ABI_MISMATCH` | 12 | Несовместимая версия |
+```rust
+CommandFlags::NONE        // Нет флагов
+CommandFlags::ELEVATED    // Требует привилегий
+CommandFlags::LONG_RUNNING // Длительная операция
+CommandFlags::DESTRUCTIVE  // Изменяет систему
+CommandFlags::NETWORK      // Требует сеть
+CommandFlags::FILESYSTEM   // Работа с FS
+```
+
+### SdkError
+
+```rust
+SdkError::Success         // 0 - Успех
+SdkError::InvalidArgs     // 1 - Неверные аргументы
+SdkError::NotFound        // 2 - Не найдено
+SdkError::AccessDenied    // 3 - Доступ запрещён
+SdkError::AbiMismatch     // 12 - Несовместимый ABI
+// ... и другие
+```
 
 ### Функции win модуля
 
 | Функция | Описание |
 |---------|----------|
-| `win::get_peb()` | Получить PEB |
-| `win::get_kernel32()` | kernel32.dll |
-| `win::get_ntdll()` | ntdll.dll |
-| `win::get_iphlpapi()` | iphlpapi.dll |
-| `win::get_module_by_hash(hash)` | Найти модуль по хешу |
-| `win::get_proc_by_hash(module, hash)` | Найти функцию по хешу |
+| `win::peb()` | Получить PEB |
+| `win::kernel32()` | kernel32.dll |
+| `win::ntdll()` | ntdll.dll |
+| `win::iphlpapi()` | iphlpapi.dll |
+| `win::get_module_by_hash(hash)` | Найти модуль |
+| `win::get_proc_by_hash(mod, hash)` | Найти функцию |
 
 ### Утилиты
 
@@ -128,7 +150,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-milow-plugin-sdk = { git = "https://github.com/LuxVTZ/milow-plugin-sdk" }
+milow-plugin-sdk = { path = "../milow-plugin-sdk" }
 
 [profile.release]
 opt-level = "z"
@@ -143,6 +165,7 @@ strip = true
 target = "x86_64-pc-windows-gnu"
 
 [target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"
 rustflags = ["-C", "link-arg=-nostdlib", "-C", "link-arg=-Wl,-e,_start"]
 ```
 

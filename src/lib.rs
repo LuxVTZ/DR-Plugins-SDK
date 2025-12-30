@@ -51,6 +51,7 @@ mod ffi;
 mod util;
 
 pub mod error;
+pub mod types;
 pub mod hashes;
 pub mod win;
 
@@ -63,11 +64,16 @@ pub use abi::{
     PluginCallback,
     PluginCommand,
     PluginCallbackTable,
+    CommandBuilder,
     check_abi_version,
 };
 
 // Реэкспорт хешей
 pub use hash::{djb2_hash, djb2_hash_ci, djb2, djb2_ci};
+
+// Реэкспорт типов
+pub use types::{CmdHash, ModuleHash, ApiHash, PluginId, CommandFlags};
+pub use error::SdkError;
 
 // Реэкспорт FFI
 pub use ffi::*;

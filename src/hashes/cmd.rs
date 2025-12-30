@@ -1,7 +1,27 @@
 //! Хеши команд плагинов
+//!
+//! Предвычисленные DJB2 хеши для стандартных команд.
 
 use crate::hash::djb2;
+use crate::types::CmdHash;
 
+// Type-safe хеши
+pub const PING_HASH: CmdHash = CmdHash::from_raw(djb2(b"ping"));
+pub const PONG_HASH: CmdHash = CmdHash::from_raw(djb2(b"pong"));
+pub const EXEC_HASH: CmdHash = CmdHash::from_raw(djb2(b"exec"));
+pub const SHELL_HASH: CmdHash = CmdHash::from_raw(djb2(b"shell"));
+pub const SCREENSHOT_HASH: CmdHash = CmdHash::from_raw(djb2(b"screenshot"));
+pub const KEYLOG_HASH: CmdHash = CmdHash::from_raw(djb2(b"keylog"));
+pub const KEYLOG_START_HASH: CmdHash = CmdHash::from_raw(djb2(b"keylog_start"));
+pub const KEYLOG_STOP_HASH: CmdHash = CmdHash::from_raw(djb2(b"keylog_stop"));
+pub const KEYLOG_DUMP_HASH: CmdHash = CmdHash::from_raw(djb2(b"keylog_dump"));
+pub const SYSINFO_HASH: CmdHash = CmdHash::from_raw(djb2(b"sysinfo"));
+pub const PROCLIST_HASH: CmdHash = CmdHash::from_raw(djb2(b"proclist"));
+pub const ENVVARS_HASH: CmdHash = CmdHash::from_raw(djb2(b"envvars"));
+pub const NETINFO_HASH: CmdHash = CmdHash::from_raw(djb2(b"netinfo"));
+pub const DISKINFO_HASH: CmdHash = CmdHash::from_raw(djb2(b"diskinfo"));
+
+// Raw u32 хеши для обратной совместимости
 pub const PING: u32 = djb2(b"ping");
 pub const PONG: u32 = djb2(b"pong");
 pub const EXEC: u32 = djb2(b"exec");
