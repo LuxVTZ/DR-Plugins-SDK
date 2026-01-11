@@ -1,0 +1,48 @@
+name: Release - DR-Plugins-SDK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-gnu
+
+      - name: Install MinGW
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64
+
+      - name: Build for Windows
+        run: cargo build --target x86_64-pc-windows-gnu --release
+
+      - name: Create Release Notes
+        run: |
+          echo "## Changes" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "Release \${{ github.ref_name }}" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "### Build Artifacts" >> RELEASE_NOTES.md
+          echo "- SDK library for Windows x64" >> RELEASE_NOTES.md
+          echo "- Optimized with LTO and size optimization" >> RELEASE_NOTES.md
+          echo "- Position-independent, no_std compatible" >> RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+          files: |
+            target/x86_64-pc-windows-gnu/release/*.rlib

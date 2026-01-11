@@ -2,20 +2,33 @@
 name = "milow-plugin-sdk"
 version = "3.0.0"
 edition = "2021"
-description = "SDK for developing Milow Agent plugins in Rust (no_std)"
+description = "High-performance SDK for developing position-independent Milow Agent plugins in Rust (no_std)"
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/LuxVTZ/milow-plugin-sdk"
-keywords = ["plugin", "sdk", "no-std", "ffi", "windows"]
-categories = ["no-std", "api-bindings"]
+repository = "https://github.com/LuxVTZ/DR-Plugins-SDK"
+homepage = "https://github.com/LuxVTZ/DR-Plugins-SDK"
+documentation = "https://docs.rs/milow-plugin-sdk"
+authors = ["LuxVTZ <luxvtz@protonmail.com>"]
+keywords = ["plugin", "sdk", "no-std", "ffi", "windows", "malware", "security", "pentest", "red-team", "post-exploitation"]
+categories = ["no-std", "api-bindings", "os::windows-apis"]
+exclude = [
+    "examples/*",
+    "target/*",
+    ".git/*",
+    ".github/*",
+    "*.md",
+    "LICENSE",
+]
 
 [workspace]
+members = []
 
 [lib]
 crate-type = ["rlib"]
 
 [features]
 default = []
+std = []
 
 [dependencies]
 
@@ -25,7 +38,21 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
+debug = false
 
 [profile.dev]
 opt-level = 0
 panic = "abort"
+debug = true
+
+[profile.bench]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.test]
+opt-level = 0
+panic = "abort"
+debug = true

@@ -1,6 +1,201 @@
-/target
+# Rust
+target/
 Cargo.lock
+
+# IDE
+.vscode/
+.idea/
 *.swp
 *.swo
-.idea/
-.vscode/
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.dll
+*.so
+*.dylib
+*.exe
+*.o
+*.obj
+
+# Debug
+*.pdb
+*.dbg
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Editor backups
+*~
+
+# Rust coverage
+coverage/
+*.profraw
+lcov.info
+
+# Cargo
+.cargo/
+!Cargo.toml
+!Cargo.lock
+
+# IDE specific
+*.code-workspace
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Linux
+*~
+.fuse_hidden*
+.Trash-*
+.nfs*
+
+# Windows
+Desktop.ini
+ehthumbs_vista.db
+*.stackdump
+
+# Mac
+.AppleDouble
+.LSOverride
+._*
+
+# Cargo target for cross-compilation
+x86_64-pc-windows-gnu/
+i686-pc-windows-gnu/
+
+# Rust analyzer
+.rustfmt.toml
+rustfmt.toml
+
+# Clippy
+clippy.toml
+
+# Coverage
+tarpaulin-report.*
+grcov*
+
+# Benchmark
+benchmarks/
+criterion/
+
+# Examples (but keep the directory)
+!/examples/
+examples/target/
+
+# Documentation
+doc/
+target-doc/
+
+# IDE specific files
+*.sublime-project
+*.sublime-workspace
+*.vsix
+
+# Node (if any JS tooling)
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Python (if any tooling)
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+.venv/
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Kubernetes
+k8s/
+*.kubeconfig
+
+# CI/CD
+.github/secrets/
+
+# Local development
+*.local
+*.dev
+
+# Cache
+.cargo/
+.cache/
+.rustup/
+
+# Temporary cargo files
+.cargo/credentials
+.cargo/credentials.toml
+
+# Rust-Analyzer
+.rust-analyzer/
+rust-analyzer.json
+
+# Profiling
+perf.data
+flamegraph.svg
+*.perf
+
+# Benchmark results
+**/benchmarks/results/
+**/criterion/
+
+# Test artifacts
+**/test_artifacts/
+**/test_output/
+
+# Fuzzing
+fuzz/corpus/
+fuzz/artifacts/
+fuzz/target/
+
+# Miri
+.miri/
+
+# ThreadSanitizer
+tsan/
+
+# Codecov
+codecov
+codecov.json
+
+# Security
+secrets/
+*.key
+*.pem
+*.crt
+*.csr
+
+# Local config
+config.local.toml
+config.dev.toml
+
+# Custom
+*.code-workspace
+**/.DS_Store
+**/Thumbs.db
